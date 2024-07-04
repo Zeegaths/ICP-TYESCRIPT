@@ -57,7 +57,7 @@ export default Server(() => {
 
     app.get("/beats/:id", (req:Request, res:Response) => {
         const beatId = req.params.id;
-        const beatOpt = beatsStorage.get(beatId);
+        const beatOpt = beatFinder(beatId);
         if ("None" in beatOpt) {
           return  res.status(404).send(`The beat with id=${beatId} not found`);
         } else {
@@ -67,7 +67,7 @@ export default Server(() => {
 
     app.put("/beats/:id", (req, res) => {
         const beatId = req.params.id;
-        const beatOpt = beatsStorage.get(beatId);
+        const beatOpt = beatFinder(beatId);
         if ("None" in beatOpt) {
             return res.status(400).send(`Couldn't update the beat with id=${beatId}. Beat not found`);
         } else {
@@ -90,7 +90,7 @@ export default Server(() => {
 
     app.post("/beats/:id/buy", (req:Request, res:Response) => {
         const beatId = req.params.id;
-        const beatOpt = beatsStorage.get(beatId);
+        const beatOpt = beatFinder(beatId);
         if ("None" in beatOpt) {
           return res.status(404).send(`The beat with id=${beatId} not found`);
         } else {
