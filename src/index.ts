@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Server, StableBTreeMap, ic } from 'azle';
-import express from 'express';
+import express,{Request,Response} from 'express';
 
 /**
  * `beatsStorage` - it's a key-value data structure used to store beats.
@@ -33,40 +33,48 @@ class Beat {
 
 const beatsStorage = StableBTreeMap<string, Beat>(0);
 
+const generateRes = (res: Response, status: number, data: any) => {
+    return res.status(status).json({ status, ...data });
+};
+
+const beatFinder = (id: string) => {
+    return beatsStorage.get(id)};
+
 export default Server(() => {
     const app = express();
     app.use(express.json());
 
-    app.post("/beats", (req, res) => {
+    app.post("/beats", (req:Request, res:Response) => {
         const beat: Beat = { id: uuidv4(), createdAt: getCurrentDate(), ...req.body, updatedAt: null, sold: false };
         beatsStorage.insert(beat.id, beat);
-        res.json(beat);
+        
+        return generateRes(res,201,beat)
     });
 
-    app.get("/beats", (req, res) => {
-        res.json(beatsStorage.values());
+    app.get("/beats", (req:Request, res:Response) => {
+        return generateRes(res, 200,beatsStorage.values())
     });
 
-    app.get("/beats/:id", (req, res) => {
+    app.get("/beats/:id", (req:Request, res:Response) => {
         const beatId = req.params.id;
-        const beatOpt = beatsStorage.get(beatId);
+        const beatOpt = beatFinder(beatId);
         if ("None" in beatOpt) {
-            res.status(404).send(`The beat with id=${beatId} not found`);
+          return  res.status(404).send(`The beat with id=${beatId} not found`);
         } else {
-            res.json(beatOpt.Some);
+            return generateRes(res,200,beatOpt.Some)
         }
     });
 
     app.put("/beats/:id", (req, res) => {
         const beatId = req.params.id;
-        const beatOpt = beatsStorage.get(beatId);
+        const beatOpt = beatFinder(beatId);
         if ("None" in beatOpt) {
-            res.status(400).send(`Couldn't update the beat with id=${beatId}. Beat not found`);
+            return res.status(400).send(`Couldn't update the beat with id=${beatId}. Beat not found`);
         } else {
             const beat = beatOpt.Some;
             const updatedBeat = { ...beat, ...req.body, updatedAt: getCurrentDate() };
             beatsStorage.insert(beat.id, updatedBeat);
-            res.json(updatedBeat);
+            return generateRes(res,200,updatedBeat);
         }
     });
 
@@ -74,30 +82,32 @@ export default Server(() => {
         const beatId = req.params.id;
         const deletedBeat = beatsStorage.remove(beatId);
         if ("None" in deletedBeat) {
-            res.status(400).send(`Couldn't delete the beat with id=${beatId}. Beat not found`);
+            return res.status(400).send(`Couldn't delete the beat with id=${beatId}. Beat not found`);
         } else {
-            res.json(deletedBeat.Some);
+            return generateRes(res,200,deletedBeat.Some)
         }
     });
 
-    app.post("/beats/:id/buy", (req, res) => {
+    app.post("/beats/:id/buy", (req:Request, res:Response) => {
         const beatId = req.params.id;
-        const beatOpt = beatsStorage.get(beatId);
+        const beatOpt = beatFinder(beatId);
         if ("None" in beatOpt) {
-            res.status(404).send(`The beat with id=${beatId} not found`);
+          return res.status(404).send(`The beat with id=${beatId} not found`);
         } else {
             let beat = beatOpt.Some;
             if (beat.sold) {
-                res.status(400).send(`The beat with id=${beatId} is already sold`);
+                return res.status(400).send(`The beat with id=${beatId} is already sold`);
             } else {
                 beat = { ...beat, sold: true, updatedAt: getCurrentDate() };
                 beatsStorage.insert(beat.id, beat);
-                res.json(beat);
+                return generateRes(res,200,beat);
             }
         }
     });
-
-    return app.listen();
+    const PORT = 4000
+    return app.listen(PORT,()=>{
+        console.log(`Server is running on port ${PORT}`)
+    })
 });
 
 function getCurrentDate() {
