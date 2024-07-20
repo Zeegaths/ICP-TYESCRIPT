@@ -1,0 +1,42 @@
+type Beat = record {
+    id: text;
+    title: text;
+    artist: text;
+    price: float64;
+    url: text;
+    createdAt: int;
+    updatedAt: opt int;
+    sold: bool;
+    featured: bool;
+};
+
+service : {
+    "beats" : (record {
+        title: text;
+        artist: text;
+        price: float64;
+        url: text;
+    }) -> (Beat) query;
+
+    "getBeats" : () -> (vec Beat) query;
+
+    "getBeatById" : (text) -> (opt Beat) query;
+
+    "updateBeat" : (record {
+        id: text;
+        title: opt text;
+        artist: opt text;
+        price: opt float64;
+        url: opt text;
+    }) -> (opt Beat);
+
+    "deleteBeat" : (text) -> (opt Beat);
+
+    "buyBeat" : (text) -> (opt Beat);
+
+    "searchBeatsByArtist" : (text) -> (vec Beat) query;
+
+    "searchBeatsByTitle" : (text) -> (vec Beat) query;
+
+    "featureBeat" : (text) -> (opt Beat);
+}
